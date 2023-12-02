@@ -140,6 +140,9 @@ if [ "$local_interface_addr" != "" ]; then
     fi
 fi
 
+#Sleep min 30, max 60 to counter thundering herd issues at server side
+sleep $((RANDOM % 30 + 30));
+
 if [ "$current_ip" = "" ]; then
 	# Retrieve current public IP address
 	current_ip=`curl --silent https://ydns.io/api/v1/ip`
@@ -174,11 +177,17 @@ if [ "$current_ip" != "$last_ip" ]; then
 			exit 0
 			;;
 
+		nochg*)
+			write_msg "YDNS host update skipped, no change: $YDNS_HOST ($current_ip)"
+			echo "$current_ip" > $YDNS_LASTIP_FILE
+			exit 0
+			;;
+
 		*)
 			write_msg "YDNS host update failed: $YDNS_HOST ($ret)" 2
 			exit 91
 			;;
 	esac
-else
-	write_msg "Not updating YDNS host $YDNS_HOST: IP address unchanged" 2
+# else
+#	write_msg "Not updating YDNS host $YDNS_HOST: IP address unchanged" 2
 fi
